@@ -36,7 +36,7 @@ export default function Home() {
           className="w-full max-w-lg md:max-w-xl"
         >
           <CarouselContent>
-            {messages.map((message: any, index: any) => (
+            {messages.map((message, index) => (
               <CarouselItem key={index} className="p-4">
                 <Card>
                   <CardHeader>

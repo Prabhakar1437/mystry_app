@@ -24,7 +24,9 @@ function UserDashboard() {
   const { toast } = useToast();
 
   const handleDeleteMessage = (messageId: string) => {
-    setMessages(messages.filter((message) => message._id !== messageId));
+    setMessages((prevMessages) =>
+      prevMessages.filter((message) => message._id !== messageId)
+    );
   };
 
   const { data: session } = useSession();
@@ -58,7 +60,6 @@ function UserDashboard() {
   const fetchMessages = useCallback(
     async (refresh: boolean = false) => {
       setIsLoading(true);
-      setIsSwitchLoading(false);
       try {
         const response = await axios.get<ApiResponse>("/api/get-messages");
         setMessages(response.data.messages || []);
@@ -78,23 +79,20 @@ function UserDashboard() {
         });
       } finally {
         setIsLoading(false);
-        setIsSwitchLoading(false);
       }
     },
-    [setIsLoading, setMessages, toast]
+    [toast]
   );
 
-  // Fetch initial state from the server
   useEffect(() => {
     if (!session || !session.user) return;
 
     fetchMessages();
-
     fetchAcceptMessages();
-  }, [session, setValue, toast, fetchAcceptMessages, fetchMessages]);
+  }, [session, fetchAcceptMessages, fetchMessages]);
 
-  // Handle switch change
   const handleSwitchChange = async () => {
+    setIsSwitchLoading(true);
     try {
       const response = await axios.post<ApiResponse>("/api/accept-messages", {
         acceptMessages: !acceptMessages,
@@ -113,11 +111,13 @@ function UserDashboard() {
           "Failed to update message settings",
         variant: "destructive",
       });
+    } finally {
+      setIsSwitchLoading(false);
     }
   };
 
   if (!session || !session.user) {
-    return <div>Please login</div>;
+    return <div></div>;
   }
 
   const { username } = session.user as User;
@@ -138,7 +138,7 @@ function UserDashboard() {
       <h1 className="text-4xl font-bold mb-4">User Dashboard</h1>
 
       <div className="mb-4">
-        <h2 className="text-lg font-semibold mb-2">Copy Your Unique Link</h2>{" "}
+        <h2 className="text-lg font-semibold mb-2">Copy Your Unique Link</h2>
         <div className="flex items-center">
           <input
             type="text"
@@ -179,9 +179,9 @@ function UserDashboard() {
       </Button>
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
         {messages.length > 0 ? (
-          messages.map((message, index) => (
+          messages.map((message) => (
             <MessageCard
-              key={message._id as string} // Fixed code
+              key={message._id as string}
               message={message}
               onMessageDelete={handleDeleteMessage}
             />
